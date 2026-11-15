@@ -118,6 +118,26 @@ export function black(
   );
 }
 /**
+ * Deducts the black component from one process ink and rescales the result.
+ * This is the single place where the cyan, magenta and yellow separations are
+ * derived from the color, so changing it affects the three of them at once.
+ * @param channel - Value of the RGB channel complementary to the ink (red for cyan, green for magenta, blue for yellow).
+ * @param blackColor - Black component of the pixel.
+ * @param image - Image to convert to grey.
+ * @returns - Corresponding ink value.
+ */
+function separateInk(
+  channel: number,
+  blackColor: number,
+  image: Image,
+): number {
+  return (
+    ((image.maxValue - channel - blackColor) /
+      (1 - blackColor / image.maxValue)) >>
+    0
+  );
+}
+/**
  * Returns the cyan component of a pixel.
  * @param red - Red value of current pixel.
  * @param green - Green value of current pixel.
@@ -131,11 +151,7 @@ export function cyan(
   blue: number,
   image: Image,
 ): number {
-  const blackColor = black(red, green, blue, image);
-  return (
-    ((image.maxValue - red - blackColor) / (1 - blackColor / image.maxValue)) >>
-    0
-  );
+  return separateInk(red, black(red, green, blue, image), image);
 }
 /**
  * Returns the magenta component of a pixel.
@@ -151,12 +167,7 @@ export function magenta(
   blue: number,
   image: Image,
 ): number {
-  const blackColor = black(red, green, blue, image);
-  return (
-    ((image.maxValue - green - blackColor) /
-      (1 - blackColor / image.maxValue)) >>
-    0
-  );
+  return separateInk(green, black(red, green, blue, image), image);
 }
 /**
  * Returns the yellow component of a pixel.
@@ -172,12 +183,7 @@ export function yellow(
   blue: number,
   image: Image,
 ): number {
-  const blackColor = black(red, green, blue, image);
-  return (
-    ((image.maxValue - blue - blackColor) /
-      (1 - blackColor / image.maxValue)) >>
-    0
-  );
+  return separateInk(blue, black(red, green, blue, image), image);
 }
 /**
  * Returns the hue of a pixel as a value between 0 and 255.
